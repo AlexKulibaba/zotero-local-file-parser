@@ -1,12 +1,14 @@
 import sqlite3
 import os
 import shutil
+import csv
 
 # --- CONFIGURATION ---
 # Standard path for macOS. 
 # If you are on Windows, change to: os.path.expanduser("~/Zotero/zotero.sqlite")
 db_path = os.path.expanduser("~/Zotero/zotero.sqlite")
 temp_path = "zotero_temp_debug.sqlite"
+output_csv_path = "zotero_attachments.csv"
 
 def run_simple_query():
     # 1. SAFETY: Copy the DB to a temp file to avoid "Database Locked" errors
@@ -28,7 +30,7 @@ def run_simple_query():
 
         # 3. YOUR QUERY
         query = """
-        SELECT itemID, path, contentType 
+        SELECT path, contentType 
         FROM itemAttachments 
         WHERE path IS NOT NULL 
         LIMIT 50
@@ -38,14 +40,18 @@ def run_simple_query():
         cursor.execute(query)
         rows = cursor.fetchall()
 
-        # 4. PRINT RESULTS
+        # 4. WRITE RESULTS TO CSV
         if not rows:
             print("No attachments found with that query.")
         else:
-            print(f"{'ID':<8} | {'TYPE':<20} | {'PATH'}")
-            print("-" * 60)
-            for item_id, path, content_type in rows:
-                print(f"{item_id:<8} | {content_type:<20} | {path}")
+            with open(output_csv_path, 'w', newline='', encoding='utf-8') as csvfile:
+                csv_writer = csv.writer(csvfile)
+                csv_writer.writerow(['Name', 'Type', 'Path']) # Write header
+
+                for path, content_type in rows:
+                    name = path.split(':')[-1]
+                    csv_writer.writerow([name, content_type, path])
+            print(f"Successfully saved {len(rows)} attachments to {output_csv_path}")
 
         con.close()
 
