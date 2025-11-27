@@ -9,9 +9,8 @@ app = Flask(__name__)
 CORS(app) # Enable CORS for all routes
 
 # --- CONFIGURATION ---
-# Standard path for macOS. 
-# If you are on Windows, change to: os.path.expanduser("~/Zotero/zotero.sqlite")
-DB_PATH = os.path.expanduser("~/Zotero/zotero.sqlite")
+# Use environment variable for the database path, with a fallback to the default.
+DB_PATH = os.environ.get('ZOTERO_SQLITE_PATH', os.path.expanduser("~/Zotero/zotero.sqlite"))
 TEMP_DB_PATH = "zotero_temp_backend.sqlite"
 
 # Define the base directory for Zotero storage (usually the parent of the sqlite file)
