@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import './App.css'; // This will contain Tailwind CSS directives
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -30,6 +31,7 @@ function App() {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [sortKey, setSortKey] = useState<SortKey>('id');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   useEffect(() => {
     fetch('http://127.0.0.1:5000/api/attachments')
@@ -49,8 +51,14 @@ function App() {
       });
   }, []);
 
-  const sortedAttachments = useMemo(() => {
-    const sorted = [...attachments].sort((a, b) => {
+  const filteredAndSortedAttachments = useMemo(() => {
+    const filtered = attachments.filter(
+      (attachment) =>
+        attachment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        attachment.type.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const sorted = [...filtered].sort((a, b) => {
       if (a[sortKey] < b[sortKey]) {
         return sortDirection === 'asc' ? -1 : 1;
       }
@@ -60,7 +68,7 @@ function App() {
       return 0;
     });
     return sorted;
-  }, [attachments, sortKey, sortDirection]);
+  }, [attachments, sortKey, sortDirection, searchTerm]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -118,6 +126,15 @@ function App() {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Local Zotero Attachments</h1>
 
+      <div className="mb-4">
+        <Input
+          type="text"
+          placeholder="Search by name or type..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
       <ScrollArea className="h-[70vh] w-full rounded-md border">
         <Table>
           <TableHeader>
@@ -135,7 +152,7 @@ function App() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedAttachments.map((attachment) => (
+            {filteredAndSortedAttachments.map((attachment) => (
               <TableRow key={attachment.id}>
                 <TableCell className="font-medium">{attachment.id}</TableCell>
                 <TableCell>{attachment.name}</TableCell>
