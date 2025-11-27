@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import './App.css'; // This will contain Tailwind CSS directives
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import React, { useState, useEffect, useMemo } from "react";
+import "./App.css"; // This will contain Tailwind CSS directives
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -9,10 +9,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { ModeToggle } from "@/components/mode-toggle"
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ModeToggle } from "@/components/mode-toggle";
 
 interface Attachment {
   id: number;
@@ -20,6 +25,8 @@ interface Attachment {
   type: string;
   path: string;
   is_local_file: boolean;
+  parentItemKey: string;
+  parentItemTitle: string;
 }
 
 type SortKey = keyof Attachment;
@@ -28,24 +35,27 @@ function App() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedAttachment, setSelectedAttachment] = useState<Attachment | null>(null);
+  const [selectedAttachment, setSelectedAttachment] =
+    useState<Attachment | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const [sortKey, setSortKey] = useState<SortKey>('id');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [sortKey, setSortKey] = useState<SortKey>("id");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
 
   useEffect(() => {
     setLoading(true);
-    fetch(`http://127.0.0.1:5000/api/attachments?page=${currentPage}&per_page=50`)
-      .then(response => {
+    fetch(
+      `http://127.0.0.1:5000/api/attachments?page=${currentPage}&per_page=50`
+    )
+      .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json();
       })
-      .then(data => {
+      .then((data) => {
         setAttachments(data.attachments);
         setTotalPages(Math.ceil(data.total / data.per_page));
         setLoading(false);
@@ -65,10 +75,10 @@ function App() {
 
     const sorted = [...filtered].sort((a, b) => {
       if (a[sortKey] < b[sortKey]) {
-        return sortDirection === 'asc' ? -1 : 1;
+        return sortDirection === "asc" ? -1 : 1;
       }
       if (a[sortKey] > b[sortKey]) {
-        return sortDirection === 'asc' ? 1 : -1;
+        return sortDirection === "asc" ? 1 : -1;
       }
       return 0;
     });
@@ -77,10 +87,10 @@ function App() {
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
       setSortKey(key);
-      setSortDirection('asc');
+      setSortDirection("asc");
     }
   };
 
@@ -93,30 +103,40 @@ function App() {
     if (!selectedAttachment) return null;
 
     const fileUrl = `http://127.0.0.1:5000/api/attachments/${selectedAttachment.id}/file`;
-    
-    if (selectedAttachment.type.includes('pdf')) {
+
+    if (selectedAttachment.type.includes("pdf")) {
       return (
-        <iframe 
-          src={fileUrl} 
-          title={selectedAttachment.name} 
-          className="w-full h-[80vh]" 
+        <iframe
+          src={fileUrl}
+          title={selectedAttachment.name}
+          className="w-full h-[80vh]"
           allowFullScreen
         ></iframe>
       );
-    } else if (selectedAttachment.type.includes('image')) {
-      return <img src={fileUrl} alt={selectedAttachment.name} className="max-w-full max-h-[80vh] object-contain" />;
-    } else if (selectedAttachment.type.includes('html')) {
-        return (
-            <iframe
-                src={fileUrl}
-                title={selectedAttachment.name}
-                className="w-full h-[80vh]"
-                sandbox="allow-scripts allow-same-origin"
-            ></iframe>
-        );
+    } else if (selectedAttachment.type.includes("image")) {
+      return (
+        <img
+          src={fileUrl}
+          alt={selectedAttachment.name}
+          className="max-w-full max-h-[80vh] object-contain"
+        />
+      );
+    } else if (selectedAttachment.type.includes("html")) {
+      return (
+        <iframe
+          src={fileUrl}
+          title={selectedAttachment.name}
+          className="w-full h-[80vh]"
+          sandbox="allow-scripts allow-same-origin"
+        ></iframe>
+      );
     }
-    
-    return <p>Preview not available for this file type ({selectedAttachment.type}).</p>;
+
+    return (
+      <p>
+        Preview not available for this file type ({selectedAttachment.type}).
+      </p>
+    );
   };
 
   if (loading) {
@@ -156,6 +176,9 @@ function App() {
               <TableHead className="cursor-pointer" onClick={() => handleSort('type')}>
                 Type {sortKey === 'type' && (sortDirection === 'asc' ? '▲' : '▼')}
               </TableHead>
+              <TableHead className="cursor-pointer" onClick={() => handleSort('parentItemTitle')}>
+                Parent Item Title {sortKey === 'parentItemTitle' && (sortDirection === 'asc' ? '▲' : '▼')}
+              </TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -165,11 +188,24 @@ function App() {
                 <TableCell className="font-medium">{attachment.id}</TableCell>
                 <TableCell>{attachment.name}</TableCell>
                 <TableCell>{attachment.type}</TableCell>
+                <TableCell>{attachment.parentItemTitle}</TableCell>
                 <TableCell className="text-right">
-                  <Button onClick={() => handleViewAttachment(attachment)} size="sm" className="mr-2">
+                  <Button
+                    onClick={() => handleViewAttachment(attachment)}
+                    size="sm"
+                    className="mr-2"
+                  >
                     View
                   </Button>
-                  <Button onClick={() => window.open(`zotero://select/library/items/${attachment.parentItemKey}`)} size="sm" variant="outline">
+                  <Button
+                    // onClick={() =>
+                    //   window.open(
+                    //     `zotero://select/library/items/${attachment.parentItemKey}`
+                    //   )
+                    // }
+                    size="sm"
+                    variant="outline"
+                  >
                     Open in Zotero
                   </Button>
                 </TableCell>
@@ -179,11 +215,21 @@ function App() {
         </Table>
       </ScrollArea>
       <div className="flex justify-between items-center mt-4">
-        <Button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
+        <Button
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+        >
           Previous
         </Button>
-        <span>Page {currentPage} of {totalPages}</span>
-        <Button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>
+        <span>
+          Page {currentPage} of {totalPages}
+        </span>
+        <Button
+          onClick={() =>
+            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+          }
+          disabled={currentPage === totalPages}
+        >
           Next
         </Button>
       </div>
