@@ -70,7 +70,8 @@ function App() {
     const filtered = attachments.filter(
       (attachment) =>
         attachment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        attachment.type.toLowerCase().includes(searchTerm.toLowerCase())
+        attachment.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        attachment.parentItemTitle.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const sorted = [...filtered].sort((a, b) => {
