@@ -32,24 +32,28 @@ function App() {
   const [sortKey, setSortKey] = useState<SortKey>('id');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:5000/api/attachments')
+    setLoading(true);
+    fetch(`http://127.0.0.1:5000/api/attachments?page=${currentPage}&per_page=50`)
       .then(response => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json();
       })
-      .then((data: Attachment[]) => {
-        setAttachments(data);
+      .then(data => {
+        setAttachments(data.attachments);
+        setTotalPages(Math.ceil(data.total / data.per_page));
         setLoading(false);
       })
       .catch((e: Error) => {
         setError(e.message);
         setLoading(false);
       });
-  }, []);
+  }, [currentPage]);
 
   const filteredAndSortedAttachments = useMemo(() => {
     const filtered = attachments.filter(
@@ -167,6 +171,15 @@ function App() {
           </TableBody>
         </Table>
       </ScrollArea>
+      <div className="flex justify-between items-center mt-4">
+        <Button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
+          Previous
+        </Button>
+        <span>Page {currentPage} of {totalPages}</span>
+        <Button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>
+          Next
+        </Button>
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="min-w-[90vw] min-h-[90vh]">
