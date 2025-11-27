@@ -46,23 +46,29 @@ def get_attachments():
         total = cursor.fetchone()[0]
 
         query = """
-        SELECT itemID, path, contentType 
-        FROM itemAttachments 
-        WHERE path IS NOT NULL
+        SELECT
+            ia.itemID,
+            ia.path,
+            ia.contentType,
+            i.key
+        FROM itemAttachments ia
+        JOIN items i ON ia.parentItemID = i.itemID
+        WHERE ia.path IS NOT NULL
         LIMIT ? OFFSET ?
         """
         
         cursor.execute(query, (per_page, offset))
         rows = cursor.fetchall()
 
-        for item_id, path, content_type in rows:
+        for item_id, path, content_type, parent_item_key in rows:
             name = path.split(':')[-1]
             attachments.append({
                 "id": item_id,
                 "name": name,
                 "type": content_type,
                 "path": path,
-                "is_local_file": path.startswith("storage:")
+                "is_local_file": path.startswith("storage:"),
+                "parentItemKey": parent_item_key
             })
 
     except sqlite3.Error as e:

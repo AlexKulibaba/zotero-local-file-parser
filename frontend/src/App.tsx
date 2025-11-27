@@ -166,8 +166,11 @@ function App() {
                 <TableCell>{attachment.name}</TableCell>
                 <TableCell>{attachment.type}</TableCell>
                 <TableCell className="text-right">
-                  <Button onClick={() => handleViewAttachment(attachment)} size="sm">
+                  <Button onClick={() => handleViewAttachment(attachment)} size="sm" className="mr-2">
                     View
+                  </Button>
+                  <Button onClick={() => window.open(`zotero://select/library/items/${attachment.parentItemKey}`)} size="sm" variant="outline">
+                    Open in Zotero
                   </Button>
                 </TableCell>
               </TableRow>
