@@ -54,9 +54,12 @@ def document_database():
                         md_file.write(f"| {' | '.join(column_names)} |\n")
                         md_file.write(f"|{'|'.join(['---'] * len(column_names))}|")
                         for row in sample_data:
-                            # Sanitize row data for Markdown table
-                            sanitized_row = [str(item).replace('|', '||') for item in row]
-                            md_file.write(f"| {' | '.join(map(str, sanitized_row))} |\n")
+                            sanitized_row = []
+                            for item in row:
+                                if isinstance(item, (str, bytes)) and len(item) > 100:
+                                    item = str(item[:100]) + '... [truncated]'
+                                sanitized_row.append(str(item).replace('|', '\\|'))
+                            md_file.write(f"| {' | '.join(sanitized_row)} |\n")
                     else:
                         md_file.write("No data in this table.\n")
                 except sqlite3.OperationalError as e:
