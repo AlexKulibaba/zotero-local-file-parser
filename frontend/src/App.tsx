@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ModeToggle } from "@/components/mode-toggle";
+import { Loader2 } from "lucide-react"; // Import Loader2 icon
 
 interface Attachment {
   id: number;
@@ -141,7 +142,11 @@ function App() {
   };
 
   if (loading) {
-    return <div className="p-4">Loading attachments...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="h-10 w-10 animate-spin" />
+      </div>
+    );
   }
 
   if (error) {
