@@ -52,7 +52,7 @@ def document_database():
                         # Get column names for the header
                         column_names = [description[0] for description in cursor.description]
                         md_file.write(f"| {' | '.join(column_names)} |\n")
-                        md_file.write(f"|{'|'.join(['---'] * len(column_names))}|")
+                        md_file.write(f"|{'|'.join(['---'] * len(column_names))}|\n")
                         for row in sample_data:
                             sanitized_row = []
                             for item in row:
