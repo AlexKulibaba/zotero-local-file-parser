@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './App.css'; // This will contain Tailwind CSS directives
 import { Button } from '@/components/ui/button';
 import {
@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Attachment {
@@ -20,12 +20,16 @@ interface Attachment {
   is_local_file: boolean;
 }
 
+type SortKey = keyof Attachment;
+
 function App() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedAttachment, setSelectedAttachment] = useState<Attachment | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [sortKey, setSortKey] = useState<SortKey>('id');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
     fetch('http://127.0.0.1:5000/api/attachments')
@@ -45,6 +49,28 @@ function App() {
       });
   }, []);
 
+  const sortedAttachments = useMemo(() => {
+    const sorted = [...attachments].sort((a, b) => {
+      if (a[sortKey] < b[sortKey]) {
+        return sortDirection === 'asc' ? -1 : 1;
+      }
+      if (a[sortKey] > b[sortKey]) {
+        return sortDirection === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+    return sorted;
+  }, [attachments, sortKey, sortDirection]);
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
+    }
+  };
+
   const handleViewAttachment = (attachment: Attachment) => {
     setSelectedAttachment(attachment);
     setIsDialogOpen(true);
@@ -55,7 +81,6 @@ function App() {
 
     const fileUrl = `http://127.0.0.1:5000/api/attachments/${selectedAttachment.id}/file`;
     
-    // Basic detection for PDF vs. image. More types could be added.
     if (selectedAttachment.type.includes('pdf')) {
       return (
         <iframe 
@@ -68,13 +93,12 @@ function App() {
     } else if (selectedAttachment.type.includes('image')) {
       return <img src={fileUrl} alt={selectedAttachment.name} className="max-w-full max-h-[80vh] object-contain" />;
     } else if (selectedAttachment.type.includes('html')) {
-        // For HTML, we can also use an iframe. Be aware of potential security risks with untrusted HTML.
         return (
             <iframe
                 src={fileUrl}
                 title={selectedAttachment.name}
                 className="w-full h-[80vh]"
-                sandbox="allow-scripts allow-same-origin" // Basic sandbox for security
+                sandbox="allow-scripts allow-same-origin"
             ></iframe>
         );
     }
@@ -98,14 +122,20 @@ function App() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[50px]">ID</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Type</TableHead>
+              <TableHead className="w-[50px] cursor-pointer" onClick={() => handleSort('id')}>
+                ID {sortKey === 'id' && (sortDirection === 'asc' ? '▲' : '▼')}
+              </TableHead>
+              <TableHead className="cursor-pointer" onClick={() => handleSort('name')}>
+                Name {sortKey === 'name' && (sortDirection === 'asc' ? '▲' : '▼')}
+              </TableHead>
+              <TableHead className="cursor-pointer" onClick={() => handleSort('type')}>
+                Type {sortKey === 'type' && (sortDirection === 'asc' ? '▲' : '▼')}
+              </TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {attachments.map((attachment) => (
+            {sortedAttachments.map((attachment) => (
               <TableRow key={attachment.id}>
                 <TableCell className="font-medium">{attachment.id}</TableCell>
                 <TableCell>{attachment.name}</TableCell>
