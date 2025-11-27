@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { ModeToggle } from "@/components/mode-toggle"
 
 interface Attachment {
   id: number;
@@ -128,7 +129,10 @@ function App() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Local Zotero Attachments</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Local Zotero Attachments</h1>
+        <ModeToggle />
+      </div>
 
       <div className="mb-4">
         <Input
